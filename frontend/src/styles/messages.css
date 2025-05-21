@@ -1,0 +1,63 @@
+// Global CSS for messaging components
+@keyframes dot-flashing {
+  0% {
+    opacity: 0.2;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Customizing scrollbars for message containers */
+.message-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.message-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.message-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+/* Smooth scroll */
+.message-container {
+  scroll-behavior: smooth;
+}
+
+/* File attachments */
+.attachment-preview {
+  max-width: 150px;
+  max-height: 150px;
+  object-fit: contain;
+}
+
+/* Message typing animation */
+.typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 3px;
+}
+
+.typing-dot-1 {
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 0s;
+}
+
+.typing-dot-2 {
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 0.5s;
+}
+
+.typing-dot-3 {
+  animation: dot-flashing 1s infinite alternate;
+  animation-delay: 1s;
+}

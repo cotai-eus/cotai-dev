@@ -5,6 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ThemeProvider } from './contexts/ThemeContext';
 import { AuthProvider } from './contexts/AuthContext';
+import './styles/messages.css';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement

@@ -4,6 +4,8 @@
   "private": true,
   "dependencies": {
     "@chakra-ui/react": "^3.19.1",
+    "@emoji-mart/data": "^2.0.8",
+    "@emoji-mart/react": "^2.0.0",
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.11.16",

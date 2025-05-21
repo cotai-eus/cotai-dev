@@ -14,6 +14,7 @@ const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const ComponentDemo = lazy(() => import('./pages/ComponentDemo'));
+const MessagesPage = lazy(() => import('./pages/MessagesPage'));
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -51,6 +52,7 @@ const App: React.FC = () => {
                 </PrivateRoute>
               }>              <Route index element={<Navigate to="/dashboard" replace />} />
               <Route path="dashboard" element={<Dashboard />} />
+              <Route path="messages" element={<MessagesPage />} />
               <Route path="components" element={<ComponentDemo />} />
               {/* Adicionar mais rotas protegidas aqui */}
               </Route>
