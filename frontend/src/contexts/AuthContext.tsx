@@ -1,5 +1,6 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import api from '../services/api';
+import jwtDecode from 'jwt-decode';
 
 interface User {
   id: string;
@@ -8,12 +9,27 @@ interface User {
   role: string;
 }
 
+interface TokenData {
+  exp: number;
+  sub: string;
+  role: string;
+}
+
+interface AuthState {
+  token: string;
+  refreshToken: string;
+  user: User;
+}
+
 interface AuthContextData {
   signed: boolean;
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => void;
+  updateUser: (user: User) => void;
+  isTokenExpired: () => boolean;
+  refreshAccessToken: () => Promise<boolean>;
 }
 
 const AuthContext = createContext<AuthContextData>({} as AuthContextData);
@@ -23,17 +39,23 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<User | null>(null);
+  const [data, setData] = useState<AuthState>({} as AuthState);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadStoredData() {
       const storedToken = localStorage.getItem('token');
+      const storedRefreshToken = localStorage.getItem('refreshToken');
       const storedUser = localStorage.getItem('user');
 
-      if (storedToken && storedUser) {
+      if (storedToken && storedRefreshToken && storedUser) {
         api.defaults.headers.Authorization = `Bearer ${storedToken}`;
-        setUser(JSON.parse(storedUser));
+        
+        setData({
+          token: storedToken,
+          refreshToken: storedRefreshToken,
+          user: JSON.parse(storedUser),
+        });
       }
 
       setLoading(false);
@@ -47,14 +69,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true);
       const response = await api.post('/auth/login', { email, password });
       
-      const { token, user } = response.data;
+      const { access_token, refresh_token, user } = response.data;
       
-      localStorage.setItem('token', token);
+      localStorage.setItem('token', access_token);
+      localStorage.setItem('refreshToken', refresh_token);
       localStorage.setItem('user', JSON.stringify(user));
       
-      api.defaults.headers.Authorization = `Bearer ${token}`;
+      api.defaults.headers.Authorization = `Bearer ${access_token}`;
       
-      setUser(user);
+      setData({
+        token: access_token,
+        refreshToken: refresh_token,
+        user,
+      });
     } finally {
       setLoading(false);
     }
@@ -62,13 +89,66 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   function signOut() {
     localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
     localStorage.removeItem('user');
-    setUser(null);
+    setData({} as AuthState);
+  }
+
+  function updateUser(user: User) {
+    localStorage.setItem('user', JSON.stringify(user));
+    setData({
+      ...data,
+      user,
+    });
+  }
+
+  function isTokenExpired(): boolean {
+    if (!data.token) return true;
+    
+    try {
+      const decoded = jwtDecode<TokenData>(data.token);
+      const currentTime = Date.now() / 1000;
+      return decoded.exp < currentTime;
+    } catch {
+      return true;
+    }
+  }
+
+  async function refreshAccessToken(): Promise<boolean> {
+    try {
+      const response = await api.post('/auth/refresh', { refresh_token: data.refreshToken });
+      const { access_token, refresh_token } = response.data;
+      
+      localStorage.setItem('token', access_token);
+      localStorage.setItem('refreshToken', refresh_token);
+      
+      api.defaults.headers.Authorization = `Bearer ${access_token}`;
+      
+      setData({
+        ...data,
+        token: access_token,
+        refreshToken: refresh_token,
+      });
+      
+      return true;
+    } catch (error) {
+      signOut();
+      return false;
+    }
   }
 
   return (
     <AuthContext.Provider
-      value={{ signed: !!user, user, loading, signIn, signOut }}
+      value={{ 
+        signed: !!data.user, 
+        user: data.user || null, 
+        loading, 
+        signIn, 
+        signOut, 
+        updateUser,
+        isTokenExpired,
+        refreshAccessToken 
+      }}
     >
       {children}
     </AuthContext.Provider>
