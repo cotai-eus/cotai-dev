@@ -1,82 +1,166 @@
-# Quotation and Risk Analysis Backend
+# Quotation and Risk Analysis Module
 
-This implementation provides a comprehensive solution for quotation management and risk analysis in the CotAi application.
+This module implements a comprehensive backend system for managing quotations and performing risk analysis in the CotAi application. It provides functionality for creating, managing, and analyzing quotations with advanced pricing and risk assessment features.
 
-## Architecture Overview
+## Features
 
-The implementation follows a layered architecture:
+### Data Models
 
-1. **Models**: SQL Alchemy models for the database entities
-2. **Schemas**: Pydantic schemas for API request/response validation
-3. **Repositories**: Data access layer for database operations
-4. **Services**: Business logic for price suggestions and risk analysis
-5. **API Routes**: FastAPI endpoints for exposing the functionality
+- **Quotation**: Main quotation model with metadata, financial details, and risk analysis
+- **QuotationItem**: Items within a quotation with pricing, cost, and competitiveness metrics
+- **HistoricalPrice**: Historical pricing data for competitive price suggestions
+- **RiskFactor**: Configurable risk evaluation criteria
+- **QuotationHistoryEntry**: Audit trail of all changes to quotations
+- **QuotationTag**: Categorization system for quotations
 
-## Key Features
+### Core Components
 
-### Quotation Management
+1. **Repositories**
+   - Data access layer for all quotation-related models
+   - Advanced filtering and searching capabilities
+   - Optimized query patterns with relationship loading
 
-- Create, read, update, delete quotations
-- Manage quotation items, tags, and metadata
-- Track quotation history and status changes
-- Search and filter quotations
+2. **Services**
+   - **Price Suggestion**: Intelligent price suggestions based on historical data with competitive adjustment
+   - **Risk Analysis**: Multi-factor risk assessment system with configurable risk factors
+   - **Quotation Reports**: Summary and comparison reporting capabilities
 
-### Price Suggestion System
+3. **API Endpoints**
+   - Complete RESTful CRUD operations for quotations and items
+   - Specialized endpoints for risk analysis, price suggestions, and reporting
+   - History tracking and tag management
 
-The price suggestion system uses historical price data and various competitive strategies to suggest optimal prices:
+## Technical Details
 
-- **Historical data analysis**: Uses past pricing data to determine competitive price points
-- **Margin protection**: Ensures prices maintain target profit margins
-- **Competitive levels**: Supports different pricing strategies (aggressive, balanced, premium)
-- **Market comparison**: Evaluates prices against market averages
+### Data Models
 
-### Risk Analysis System
+#### Quotation
 
-The risk analysis system evaluates quotations based on multiple risk factors:
+The main entity that represents a complete quotation with the following properties:
 
-- **Profit margin analysis**: Evaluates if margins meet target thresholds
-- **Price competitiveness**: Compares prices with market averages
-- **Customer payment history**: Analyzes customer payment patterns
-- **Delivery timeline**: Identifies risks in delivery terms
-- **Overall risk scoring**: Calculates weighted risk scores and determines risk levels
-- **Recommendations**: Generates actionable recommendations based on detected risks
+- Basic metadata (reference ID, title, description, dates)
+- Relationships to users (customer, creator, assignee)
+- Status tracking (draft, submitted, approved, rejected, awarded, lost)
+- Financial metadata (currency, payment/delivery terms)
+- Risk analysis data (risk score, risk level, risk factors)
+- Margin calculations (target vs. actual)
+- Tag relationships for categorization
 
-### Reporting System
+#### QuotationItem
 
-The reporting system provides insights into quotation performance:
+Represents individual line items within a quotation:
 
-- **Summary reports**: Aggregates key metrics like total value, win rates, profit margins
-- **Quotation comparisons**: Compares multiple quotations side by side
-- **Status and risk distribution**: Shows distribution of quotations by status and risk level
+- Product details (SKU, name, description, unit)
+- Quantity and pricing information
+- Tax and discount percentages
+- Price source tracking and suggestions
+- Market competitiveness metrics
 
-## Database Structure
+#### HistoricalPrice
 
-The implementation includes the following tables:
+Stores historical price data to aid in competitive price suggestions:
 
-- `quotations`: Main quotation entity
-- `quotation_items`: Individual line items in a quotation
-- `quotation_tags`: Tags for categorizing quotations
-- `historical_prices`: Historical price data for price suggestions
-- `risk_factors`: Configurable risk factors for analysis
-- `quotation_history`: Audit trail for quotation changes
+- Item identification (name, SKU)
+- Pricing information
+- Context (region, customer type, bid type)
+- Results tracking (won, lost, pending)
+
+#### RiskFactor
+
+Defines configurable risk factors for evaluation:
+
+- Factor name and description
+- Weight in risk calculation
+- Parameter configuration as JSON
+
+#### QuotationHistoryEntry
+
+Tracks all changes to quotations for audit purposes:
+
+- User who made the change
+- Action performed
+- Timestamp
+- Details of changes in JSON format
+
+### API Endpoints
+
+#### Quotation Management
+
+- `POST /quotations`: Create a new quotation
+- `GET /quotations`: List quotations with filtering
+- `GET /quotations/{id}`: Get a specific quotation
+- `PUT /quotations/{id}`: Update a quotation
+- `DELETE /quotations/{id}`: Delete a quotation
+- `PATCH /quotations/{id}/status`: Update quotation status
+
+#### Item Management
+
+- `POST /quotations/{id}/items`: Add an item to a quotation
+- `PUT /quotations/{id}/items/{item_id}`: Update a quotation item
+- `DELETE /quotations/{id}/items/{item_id}`: Delete a quotation item
+
+#### Price Suggestion
+
+- `POST /quotations/price-suggestion`: Get a competitive price suggestion
+
+#### Risk Analysis
+
+- `POST /quotations/{id}/risk-analysis`: Analyze risk for a quotation
+
+#### Reports
+
+- `POST /quotations/reports/summary`: Generate a summary report
+- `POST /quotations/reports/comparison`: Compare multiple quotations
+
+#### Tag Management
+
+- `POST /quotations/tags`: Create a new tag
+- `GET /quotations/tags`: List all tags
+
+#### Historical Prices
+
+- `POST /quotations/historical-prices`: Record a historical price
+- `GET /quotations/historical-prices`: Get historical prices with filtering
+
+### Testing
+
+Unit tests are provided for:
+- Price suggestion algorithm
+- Risk analysis system
+- API endpoints
+
+### Database Setup
+
+The module includes Alembic migrations for creating the necessary tables in PostgreSQL:
+- Run `alembic upgrade head` to apply migrations
+
+### Sample Data
+
+A seed script is provided to populate the database with sample data:
+- Run `python scripts/seed_quotation_data.py` to create sample quotations, items, tags, and historical prices
 
 ## Usage Examples
 
 ### Creating a Quotation
 
 ```python
+# Example API request to create a quotation
 quotation_data = {
-    "reference_id": "QT-20250521-1234",
-    "title": "Server Equipment for Data Center",
-    "customer_id": customer.id,
+    "reference_id": "QT-20250101-0001",
+    "title": "IT Equipment Supply",
+    "customer_id": 1,
+    "description": "Supply of laptops and accessories",
     "currency": "BRL",
     "target_profit_margin": 30.0,
+    "tag_ids": [1, 3],
     "items": [
         {
-            "name": "Dell PowerEdge R740 Server",
+            "name": "Dell Latitude 5420",
+            "sku": "LAT-5420",
             "quantity": 5,
-            "unit_cost": 15000.0,
-            "unit_price": 19500.0,
+            "unit_cost": 1200.00,
+            "unit_price": 1550.00,
+            "tax_percentage": 10.0
         }
     ]
 }
@@ -85,36 +169,36 @@ quotation_data = {
 ### Getting a Price Suggestion
 
 ```python
-suggestion = await price_suggestion_service.suggest_price(
-    db_session=db,
-    item_name="Dell PowerEdge R740 Server",
-    unit_cost=15000.0,
-    target_profit_margin=30.0,
-    competitive_level="medium"
-)
+# Example API request for price suggestion
+suggestion_request = {
+    "item_name": "Dell Latitude 5420",
+    "sku": "LAT-5420",
+    "unit_cost": 1200.00,
+    "target_profit_margin": 25.0,
+    "competitive_level": "medium"
+}
 ```
 
-### Performing Risk Analysis
+### Running Risk Analysis
 
 ```python
-analysis = await risk_analysis_service.analyze_risk(
-    db_session=db,
-    quotation_id=quotation.id
-)
+# Example API request for risk analysis
+risk_analysis_request = {
+    "quotation_id": 1
+}
 ```
 
-## Testing
+## Integration Points
 
-The implementation includes comprehensive tests:
+The quotation module integrates with the following existing systems:
 
-- Unit tests for services (price suggestion, risk analysis)
-- API tests for endpoints
-- Seed script for generating test data
+1. **User System**: Uses existing user models for customers, creators, and assignees
+2. **Document System**: Links to bid documents through document IDs
+3. **Authentication System**: Uses existing authentication for all endpoints
 
-## Future Improvements
+## Future Enhancements
 
-- Integration with external price APIs
-- Machine learning for price optimization
-- Enhanced risk factor analysis
-- Real-time market data integration
-- Advanced visualization of quotation analytics
+- AI-driven price suggestions based on market trends
+- Real-time market price integration
+- Enhanced risk factor system with machine learning
+- Workflow automation for quotation approvals

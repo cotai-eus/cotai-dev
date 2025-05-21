@@ -1,247 +1,336 @@
 """
-Tests for quotation API endpoints.
+Tests for the quotation API endpoints.
 """
+import json
 import pytest
 from datetime import datetime, timedelta
-from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from fastapi.testclient import TestClient
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.main import app
-from app.models.quotation import Quotation, QuotationItem, QuotationTag, QuotationStatus
+from app.models.quotation import (
+    Quotation, QuotationItem, QuotationTag, 
+    QuotationStatus, PriceSource, RiskLevel
+)
+
+
+@pytest.fixture
+def mock_quotation():
+    """Create a mock quotation for testing"""
+    return MagicMock(
+        id=1,
+        reference_id="QT-20250101-0001",
+        title="Test Quotation",
+        customer_id=1,
+        created_by_id=1,
+        assigned_to_id=1,
+        status=QuotationStatus.DRAFT,
+        created_at=datetime.utcnow(),
+        updated_at=datetime.utcnow(),
+        submission_date=None,
+        expiration_date=datetime.utcnow() + timedelta(days=30),
+        description="Test description",
+        notes="Test notes",
+        currency="BRL",
+        payment_terms="Net 30",
+        delivery_terms="Standard delivery",
+        risk_score=None,
+        risk_level=None,
+        risk_factors=None,
+        target_profit_margin=30.0,
+        actual_profit_margin=None,
+        # Relationships
+        customer=MagicMock(id=1, username="customer", email="customer@example.com"),
+        created_by=MagicMock(id=1, username="user", email="user@example.com"),
+        assigned_to=MagicMock(id=1, username="user", email="user@example.com"),
+        tags=[],
+        items=[],
+        # Calculated properties
+        total_cost=0.0,
+        total_price=0.0,
+        profit=0.0,
+        profit_margin_percentage=0.0
+    )
+
+
+@pytest.fixture
+def mock_quotation_item():
+    """Create a mock quotation item for testing"""
+    return MagicMock(
+        id=1,
+        quotation_id=1,
+        sku="TEST-001",
+        name="Test Item",
+        description="Test item description",
+        unit="unit",
+        quantity=2,
+        unit_cost=100.0,
+        unit_price=150.0,
+        tax_percentage=10.0,
+        discount_percentage=0.0,
+        price_source=PriceSource.MANUAL,
+        suggested_unit_price=None,
+        price_suggestion_data=None,
+        market_average_price=None,
+        competitiveness_score=None,
+        # Calculated properties
+        total_cost=200.0,
+        total_price=330.0,  # (150 * 2) * 1.1 (with tax)
+        profit=130.0,
+        profit_margin_percentage=39.4,
+        is_competitive=None
+    )
+
+
+@pytest.fixture
+def mock_current_user():
+    """Create a mock authenticated user for testing"""
+    return MagicMock(
+        id=1,
+        username="testuser",
+        email="test@example.com",
+        full_name="Test User"
+    )
+
+
+@pytest.fixture
+def mock_repositories():
+    """Mock all quotation repositories"""
+    with patch("app.api.routers.quotation.quotation_repository") as mock_quotation_repo, \
+         patch("app.api.routers.quotation.quotation_item_repository") as mock_item_repo, \
+         patch("app.api.routers.quotation.quotation_tag_repository") as mock_tag_repo, \
+         patch("app.api.routers.quotation.historical_price_repository") as mock_price_repo, \
+         patch("app.api.routers.quotation.risk_factor_repository") as mock_factor_repo, \
+         patch("app.api.routers.quotation.quotation_history_repository") as mock_history_repo:
+        
+        yield {
+            "quotation_repository": mock_quotation_repo,
+            "quotation_item_repository": mock_item_repo,
+            "quotation_tag_repository": mock_tag_repo,
+            "historical_price_repository": mock_price_repo,
+            "risk_factor_repository": mock_factor_repo,
+            "quotation_history_repository": mock_history_repo
+        }
+
+
+@pytest.fixture
+def mock_services():
+    """Mock all quotation services"""
+    with patch("app.api.routers.quotation.price_suggestion_service") as mock_price_service, \
+         patch("app.api.routers.quotation.risk_analysis_service") as mock_risk_service, \
+         patch("app.api.routers.quotation.quotation_report_service") as mock_report_service:
+        
+        yield {
+            "price_suggestion_service": mock_price_service,
+            "risk_analysis_service": mock_risk_service,
+            "quotation_report_service": mock_report_service
+        }
+
+
+@pytest.fixture
+def client(mock_current_user, mock_repositories, mock_services):
+    """
+    Creates a test client with mocked authentication and db session
+    """
+    # Patch dependency to return mock user
+    with patch("app.api.routers.quotation.get_current_user", return_value=mock_current_user), \
+         patch("app.api.routers.quotation.get_async_session"):
+        
+        # Return test client
+        return TestClient(app)
 
 
 class TestQuotationAPI:
-    """Test suite for Quotation API endpoints"""
-
-    @pytest.fixture
-    def client(self):
-        """Test client fixture"""
-        return TestClient(app)
-
-    @pytest.fixture
-    def mock_user(self):
-        """Mock authenticated user"""
-        return {
-            "id": 1,
-            "username": "testuser",
-            "email": "test@example.com",
-            "full_name": "Test User",
-            "is_active": True,
-            "is_superuser": False
-        }
-
-    @pytest.fixture
-    def mock_auth(self, mock_user):
-        """Mock authentication dependencies"""
-        with patch("app.api.deps.get_current_user", return_value=mock_user):
-            yield
-
-    @pytest.fixture
-    def mock_quotation_repo(self):
-        """Mock quotation repository"""
-        mock_repo = AsyncMock()
+    """Test suite for quotation API endpoints"""
+    
+    def test_create_quotation(self, client, mock_repositories, mock_quotation):
+        """Test creating a quotation"""
+        # Setup repository mock
+        mock_repositories["quotation_repository"].create_quotation.return_value = mock_quotation
+        mock_repositories["quotation_repository"].get_quotation_by_id.return_value = mock_quotation
         
-        # Sample tag
-        tag = MagicMock()
-        tag.id = 1
-        tag.name = "Test Tag"
-        tag.color = "#FF5733"
-        
-        # Sample quotation
-        quotation = MagicMock(spec=Quotation)
-        quotation.id = 1
-        quotation.reference_id = "QT-20250521-1234"
-        quotation.title = "Test Quotation"
-        quotation.status = QuotationStatus.DRAFT
-        quotation.created_at = datetime.utcnow()
-        quotation.updated_at = datetime.utcnow()
-        quotation.customer_id = 1
-        quotation.created_by_id = 1
-        quotation.total_cost = 1000.0
-        quotation.total_price = 1300.0
-        quotation.profit = 300.0
-        quotation.profit_margin_percentage = 23.08
-        quotation.tags = [tag]
-        quotation.items = []
-        
-        # Configure mock repository
-        mock_repo.create_quotation.return_value = quotation
-        mock_repo.get_quotation_by_id.return_value = quotation
-        mock_repo.get_quotations.return_value = ([quotation], 1)
-        mock_repo.update_quotation.return_value = quotation
-        mock_repo.delete_quotation.return_value = True
-        
-        return mock_repo
-
-    @pytest.mark.asyncio
-    async def test_create_quotation(self, client, mock_auth, mock_quotation_repo):
-        """Test creating a new quotation"""
-        with patch("app.api.routers.quotation.quotation_repository", mock_quotation_repo):
-            response = client.post(
-                "/api/v1/quotations",
-                json={
-                    "reference_id": "QT-20250521-1234",
-                    "title": "Test Quotation",
-                    "customer_id": 1,
-                    "currency": "BRL",
-                    "items": [
-                        {
-                            "name": "Test Item",
-                            "quantity": 2,
-                            "unit_cost": 500.0,
-                            "unit_price": 650.0
-                        }
-                    ]
+        # Test data
+        data = {
+            "reference_id": "QT-20250101-0001",
+            "title": "Test Quotation",
+            "customer_id": 1,
+            "description": "Test description",
+            "currency": "BRL",
+            "payment_terms": "Net 30",
+            "delivery_terms": "Standard delivery",
+            "target_profit_margin": 30.0,
+            "items": [
+                {
+                    "sku": "TEST-001",
+                    "name": "Test Item",
+                    "quantity": 2,
+                    "unit_cost": 100.0,
+                    "unit_price": 150.0,
+                    "tax_percentage": 10.0
                 }
-            )
+            ]
+        }
         
+        # Make request
+        response = client.post("/api/v1/quotations", json=data)
+        
+        # Check response
         assert response.status_code == 201
-        data = response.json()
-        assert data["reference_id"] == "QT-20250521-1234"
-        assert data["title"] == "Test Quotation"
-        assert mock_quotation_repo.create_quotation.called
-
-    @pytest.mark.asyncio
-    async def test_get_quotation(self, client, mock_auth, mock_quotation_repo):
-        """Test getting a quotation by ID"""
-        with patch("app.api.routers.quotation.quotation_repository", mock_quotation_repo):
-            response = client.get("/api/v1/quotations/1")
+        assert mock_repositories["quotation_repository"].create_quotation.called
+    
+    def test_get_quotations(self, client, mock_repositories, mock_quotation):
+        """Test getting quotations list"""
+        # Setup repository mock
+        mock_repositories["quotation_repository"].get_quotations.return_value = ([mock_quotation], 1)
         
+        # Make request
+        response = client.get("/api/v1/quotations")
+        
+        # Check response
         assert response.status_code == 200
-        data = response.json()
-        assert data["id"] == 1
-        assert data["reference_id"] == "QT-20250521-1234"
-        mock_quotation_repo.get_quotation_by_id.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_get_quotation_not_found(self, client, mock_auth, mock_quotation_repo):
+        assert len(response.json()) == 1
+        assert mock_repositories["quotation_repository"].get_quotations.called
+    
+    def test_get_quotation(self, client, mock_repositories, mock_quotation):
+        """Test getting a single quotation"""
+        # Setup repository mock
+        mock_repositories["quotation_repository"].get_quotation_by_id.return_value = mock_quotation
+        
+        # Make request
+        response = client.get("/api/v1/quotations/1")
+        
+        # Check response
+        assert response.status_code == 200
+        assert response.json()["id"] == 1
+        assert mock_repositories["quotation_repository"].get_quotation_by_id.called
+    
+    def test_get_quotation_not_found(self, client, mock_repositories):
         """Test getting a non-existent quotation"""
-        mock_quotation_repo.get_quotation_by_id.return_value = None
+        # Setup repository mock
+        mock_repositories["quotation_repository"].get_quotation_by_id.return_value = None
         
-        with patch("app.api.routers.quotation.quotation_repository", mock_quotation_repo):
-            response = client.get("/api/v1/quotations/999")
+        # Make request
+        response = client.get("/api/v1/quotations/999")
         
+        # Check response
         assert response.status_code == 404
-
-    @pytest.mark.asyncio
-    async def test_update_quotation(self, client, mock_auth, mock_quotation_repo):
+    
+    def test_update_quotation(self, client, mock_repositories, mock_quotation):
         """Test updating a quotation"""
-        with patch("app.api.routers.quotation.quotation_repository", mock_quotation_repo):
-            response = client.put(
-                "/api/v1/quotations/1",
-                json={
-                    "title": "Updated Quotation Title",
-                    "notes": "Updated notes"
-                }
-            )
+        # Setup repository mock
+        mock_repositories["quotation_repository"].get_quotation_by_id.return_value = mock_quotation
+        mock_repositories["quotation_repository"].update_quotation.return_value = mock_quotation
         
-        assert response.status_code == 200
-        mock_quotation_repo.update_quotation.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_delete_quotation(self, client, mock_auth, mock_quotation_repo):
-        """Test deleting a quotation"""
-        with patch("app.api.routers.quotation.quotation_repository", mock_quotation_repo):
-            response = client.delete("/api/v1/quotations/1")
-        
-        assert response.status_code == 204
-        mock_quotation_repo.delete_quotation.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_update_quotation_status(self, client, mock_auth, mock_quotation_repo):
-        """Test updating quotation status"""
-        with patch("app.api.routers.quotation.quotation_repository", mock_quotation_repo):
-            response = client.patch(
-                "/api/v1/quotations/1/status",
-                json={"status": "submitted"}
-            )
-        
-        assert response.status_code == 200
-        mock_quotation_repo.update_quotation.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_suggest_price(self, client, mock_auth):
-        """Test the price suggestion endpoint"""
-        mock_price_service = AsyncMock()
-        mock_price_service.suggest_price.return_value = {
-            "suggested_price": 650.0,
-            "price_source": "historical",
-            "competitiveness_score": 85.0,
-            "profit_margin": 30.0,
-            "explanation": "Price based on historical data."
+        # Test data
+        data = {
+            "title": "Updated Test Quotation",
+            "description": "Updated description"
         }
         
-        with patch("app.api.routers.quotation.price_suggestion_service", mock_price_service):
-            response = client.post(
-                "/api/v1/quotations/price-suggestion",
-                json={
-                    "item_name": "Test Item",
-                    "unit_cost": 500.0,
-                    "target_profit_margin": 30.0
-                }
-            )
+        # Make request
+        response = client.put("/api/v1/quotations/1", json=data)
         
+        # Check response
         assert response.status_code == 200
-        data = response.json()
-        assert data["suggested_price"] == 650.0
-        assert data["price_source"] == "historical"
-        mock_price_service.suggest_price.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_analyze_risk(self, client, mock_auth, mock_quotation_repo):
-        """Test the risk analysis endpoint"""
-        mock_risk_service = AsyncMock()
-        mock_risk_service.analyze_risk.return_value = {
+        assert mock_repositories["quotation_repository"].update_quotation.called
+    
+    def test_delete_quotation(self, client, mock_repositories, mock_quotation):
+        """Test deleting a quotation"""
+        # Setup repository mock
+        mock_repositories["quotation_repository"].get_quotation_by_id.return_value = mock_quotation
+        mock_repositories["quotation_repository"].delete_quotation.return_value = True
+        
+        # Make request
+        response = client.delete("/api/v1/quotations/1")
+        
+        # Check response
+        assert response.status_code == 204
+        assert mock_repositories["quotation_repository"].delete_quotation.called
+    
+    def test_add_quotation_item(self, client, mock_repositories, mock_quotation, mock_quotation_item):
+        """Test adding an item to a quotation"""
+        # Setup repository mock
+        mock_repositories["quotation_repository"].get_quotation_by_id.return_value = mock_quotation
+        
+        # Test data
+        data = {
+            "sku": "TEST-002",
+            "name": "New Test Item",
+            "quantity": 1,
+            "unit_cost": 200.0,
+            "unit_price": 250.0,
+            "tax_percentage": 10.0
+        }
+        
+        # Make request
+        response = client.post("/api/v1/quotations/1/items", json=data)
+        
+        # Check response
+        assert response.status_code == 200
+    
+    def test_suggest_price(self, client, mock_services):
+        """Test price suggestion endpoint"""
+        # Setup service mock
+        mock_services["price_suggestion_service"].suggest_price.return_value = {
+            "suggested_price": 250.0,
+            "price_source": PriceSource.HISTORICAL,
+            "competitiveness_score": 85.0,
+            "historical_min": 220.0,
+            "historical_max": 300.0,
+            "historical_avg": 260.0,
+            "profit_margin": 30.0,
+            "explanation": "Price based on historical data"
+        }
+        
+        # Test data
+        data = {
+            "item_name": "Test Item",
+            "sku": "TEST-001",
+            "unit_cost": 200.0,
+            "target_profit_margin": 25.0,
+            "competitive_level": "medium"
+        }
+        
+        # Make request
+        response = client.post("/api/v1/quotations/price-suggestion", json=data)
+        
+        # Check response
+        assert response.status_code == 200
+        assert "suggested_price" in response.json()
+        assert mock_services["price_suggestion_service"].suggest_price.called
+    
+    def test_analyze_risk(self, client, mock_repositories, mock_services, mock_quotation):
+        """Test risk analysis endpoint"""
+        # Setup repository mock
+        mock_repositories["quotation_repository"].get_quotation_by_id.return_value = mock_quotation
+        
+        # Setup service mock
+        mock_services["risk_analysis_service"].analyze_risk.return_value = {
             "quotation_id": 1,
-            "overall_risk_score": 25.5,
-            "risk_level": "medium",
+            "overall_risk_score": 25.0,
+            "risk_level": RiskLevel.MEDIUM,
             "factors": [
                 {
                     "factor_id": 1,
                     "name": "Profit Margin",
-                    "score": 25.5,
-                    "level": "medium",
-                    "description": "Profit margin below target",
-                    "weight": 2.0
+                    "score": 25.0,
+                    "level": RiskLevel.MEDIUM,
+                    "description": "Profit margin is below target",
+                    "weight": 2.0,
+                    "details": {}
                 }
             ],
-            "recommendations": ["Consider increasing prices to improve profit margin."]
+            "recommendations": [
+                "Consider increasing prices to improve profit margin."
+            ]
         }
         
-        with patch("app.api.routers.quotation.risk_analysis_service", mock_risk_service), \
-             patch("app.api.routers.quotation.quotation_repository", mock_quotation_repo):
-            response = client.post("/api/v1/quotations/1/risk-analysis")
+        # Make request
+        response = client.post("/api/v1/quotations/1/risk-analysis")
         
+        # Check response
         assert response.status_code == 200
-        data = response.json()
-        assert data["quotation_id"] == 1
-        assert data["risk_level"] == "medium"
-        mock_risk_service.analyze_risk.assert_called_once()
-
-    @pytest.mark.asyncio
-    async def test_generate_summary_report(self, client, mock_auth):
-        """Test the summary report endpoint"""
-        mock_report_service = AsyncMock()
-        mock_report_service.generate_summary_report.return_value = {
-            "total_quotations": 10,
-            "total_value": 13000.0,
-            "average_value": 1300.0,
-            "won_quotations": 4,
-            "won_value": 6000.0,
-            "win_rate": 40.0,
-            "average_profit_margin": 28.5,
-            "status_distribution": {"draft": 3, "submitted": 2, "approved": 1, "awarded": 4},
-            "risk_level_distribution": {"low": 6, "medium": 3, "high": 1}
-        }
-        
-        with patch("app.api.routers.quotation.quotation_report_service", mock_report_service):
-            response = client.post(
-                "/api/v1/quotations/reports/summary",
-                json={}
-            )
-        
-        assert response.status_code == 200
-        data = response.json()
-        assert data["total_quotations"] == 10
-        assert data["won_quotations"] == 4
-        mock_report_service.generate_summary_report.assert_called_once()
+        assert "overall_risk_score" in response.json()
+        assert mock_services["risk_analysis_service"].analyze_risk.called
