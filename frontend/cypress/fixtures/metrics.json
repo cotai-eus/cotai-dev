@@ -1,0 +1,43 @@
+{
+  "metrics": [
+    {
+      "id": "total_quotations",
+      "title": "Total Quotations",
+      "value": 143,
+      "change": 12.4,
+      "period": "This month"
+    },
+    {
+      "id": "acceptance_rate",
+      "title": "Acceptance Rate",
+      "value": 68.2,
+      "change": 3.7,
+      "period": "This month"
+    },
+    {
+      "id": "avg_margin",
+      "title": "Average Margin",
+      "value": 31.5,
+      "change": -2.3,
+      "period": "This month"
+    },
+    {
+      "id": "total_revenue",
+      "title": "Total Revenue",
+      "value": 289500,
+      "change": 15.8,
+      "period": "This month"
+    }
+  ],
+  "chartData": {
+    "dailyQuotations": [
+      { "date": "2025-05-01", "value": 5 },
+      { "date": "2025-05-02", "value": 7 },
+      { "date": "2025-05-03", "value": 3 },
+      { "date": "2025-05-04", "value": 6 },
+      { "date": "2025-05-05", "value": 8 },
+      { "date": "2025-05-06", "value": 12 },
+      { "date": "2025-05-07", "value": 10 }
+    ]
+  }
+}

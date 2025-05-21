@@ -1,0 +1,122 @@
+{
+  "quotations": [
+    {
+      "id": "1",
+      "clientName": "Acme Corp",
+      "clientEmail": "contact@acme.com",
+      "createdAt": "2025-05-01T10:00:00Z",
+      "validUntil": "2025-06-01T10:00:00Z",
+      "status": "sent",
+      "items": [
+        {
+          "id": "item-1",
+          "name": "Web Development",
+          "description": "Full website development",
+          "quantity": 1,
+          "unitPrice": 5000,
+          "suggestedPrice": 5500,
+          "cost": 3000,
+          "taxRate": 0.21,
+          "totalPrice": 5000
+        },
+        {
+          "id": "item-2",
+          "name": "Content Creation",
+          "description": "Blog posts and social media content",
+          "quantity": 10,
+          "unitPrice": 200,
+          "suggestedPrice": 250,
+          "cost": 100,
+          "taxRate": 0.21,
+          "totalPrice": 2000
+        }
+      ],
+      "notes": "30-day payment terms",
+      "subtotal": 7000,
+      "taxAmount": 1470,
+      "totalAmount": 8470,
+      "profitability": {
+        "totalCost": 4000,
+        "totalRevenue": 7000,
+        "grossProfit": 3000,
+        "margin": 0.429,
+        "markupPercentage": 75
+      }
+    },
+    {
+      "id": "2",
+      "clientName": "TechStart Inc",
+      "clientEmail": "procurement@techstart.com",
+      "createdAt": "2025-05-10T14:30:00Z",
+      "validUntil": "2025-06-10T14:30:00Z",
+      "status": "draft",
+      "items": [
+        {
+          "id": "item-1",
+          "name": "Server Migration",
+          "description": "Cloud migration services",
+          "quantity": 1,
+          "unitPrice": 8000,
+          "suggestedPrice": 8500,
+          "cost": 5000,
+          "taxRate": 0.21,
+          "totalPrice": 8000
+        }
+      ],
+      "notes": "Includes 2 weeks of post-migration support",
+      "subtotal": 8000,
+      "taxAmount": 1680,
+      "totalAmount": 9680,
+      "profitability": {
+        "totalCost": 5000,
+        "totalRevenue": 8000,
+        "grossProfit": 3000,
+        "margin": 0.375,
+        "markupPercentage": 60
+      }
+    },
+    {
+      "id": "3",
+      "clientName": "Global Retail",
+      "clientEmail": "orders@globalretail.com",
+      "createdAt": "2025-05-15T09:15:00Z",
+      "validUntil": "2025-06-15T09:15:00Z",
+      "status": "accepted",
+      "items": [
+        {
+          "id": "item-1",
+          "name": "E-commerce Integration",
+          "description": "Integration with payment gateways and shipping APIs",
+          "quantity": 1,
+          "unitPrice": 4500,
+          "suggestedPrice": 4800,
+          "cost": 2500,
+          "taxRate": 0.21,
+          "totalPrice": 4500
+        },
+        {
+          "id": "item-2",
+          "name": "Mobile App Development",
+          "description": "iOS and Android app development",
+          "quantity": 1,
+          "unitPrice": 12000,
+          "suggestedPrice": 13000,
+          "cost": 7000,
+          "taxRate": 0.21,
+          "totalPrice": 12000
+        }
+      ],
+      "notes": "Milestone payments upon completion of each phase",
+      "subtotal": 16500,
+      "taxAmount": 3465,
+      "totalAmount": 19965,
+      "profitability": {
+        "totalCost": 9500,
+        "totalRevenue": 16500,
+        "grossProfit": 7000,
+        "margin": 0.424,
+        "markupPercentage": 73.7
+      }
+    }
+  ]
+}
