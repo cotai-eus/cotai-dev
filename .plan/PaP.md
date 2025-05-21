@@ -62,17 +62,17 @@ Crie um branch feature/backend-setup para estas mudanças.
 ### Prompt 4: Configuração do Banco de Dados e ORM
 
 ```
-Configure a conexão com os bancos de dados e ORM para o backend:
+    Configure a conexão com os bancos de dados e ORM para o backend:
 
-1. Configure SQLAlchemy com PostgreSQL usando psycopg
-2. Implemente Alembic para migrações
-3. Configure a conexão com MongoDB para documentos não estruturados
-4. Crie modelos base do SQLAlchemy com mixin de timestamps
-5. Implemente repositórios base para operações CRUD
-6. Configure transações e pool de conexões
-7. Implemente testes para as conexões e modelos base
+    1. Configure SQLAlchemy com PostgreSQL usando psycopg
+    2. Implemente Alembic para migrações
+    3. Configure a conexão com MongoDB para documentos não estruturados
+    4. Crie modelos base do SQLAlchemy com mixin de timestamps
+    5. Implemente repositórios base para operações CRUD
+    6. Configure transações e pool de conexões
+    7. Implemente testes para as conexões e modelos base
 
-Use o branch feature/database-setup para estas mudanças.
+    Use o branch feature/database-setup para estas mudanças.
 ```
 
 ### Prompt 5: Autenticação e Autorização
