@@ -12,6 +12,7 @@ services:
       - ./backend:/app
       - backend-media:/app/media
       - backend-static:/app/static
+      - backend-data:/app/data
     env_file:
       - .env
     depends_on:
@@ -133,6 +134,28 @@ services:
       - REDIS_PASSWORD=${REDIS_PASSWORD}
     ports:
       - "6379:6379"
+      
+  # Celery worker para processamento assíncrono
+  celery-worker:
+    build:
+      context: ./backend
+      target: ${BACKEND_TARGET:-development}
+    container_name: cotai-celery-worker
+    restart: unless-stopped
+    command: celery -A worker worker --loglevel=info
+    volumes:
+      - ./backend:/app
+      - backend-media:/app/media
+      - backend-data:/app/data
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres
+      - mongodb
+    networks:
+      - backend-network
+      - database-network
 
 networks:
   frontend-network:
@@ -149,3 +172,4 @@ volumes:
   redis-data:
   backend-media:
   backend-static:
+  backend-data:  # Para armazenar documentos processados

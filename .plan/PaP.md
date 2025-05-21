@@ -99,7 +99,7 @@ Use o branch feature/auth para estas mudanças.
 ```
 Configure o projeto frontend com React:
 
-1. Inicialize o projeto usando Create React App ou Vite
+1. Inicialize o projeto usando Vite
 2. Configure TypeScript
 3. Adicione ESLint e Prettier
 4. Configure o roteamento com React Router

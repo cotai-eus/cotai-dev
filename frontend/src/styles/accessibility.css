@@ -1,0 +1,136 @@
+/* Base accessibility styles */
+:root {
+  --a11y-font-scale: 1;
+  --a11y-line-spacing: 1.5;
+}
+
+/* Apply font scaling to text elements */
+body {
+  font-size: calc(1rem * var(--a11y-font-scale));
+  line-height: var(--a11y-line-spacing);
+}
+
+h1, h2, h3, h4, h5, h6, p, span, button, a, li, label, input, textarea, select, option {
+  line-height: var(--a11y-line-spacing);
+}
+
+/* High Contrast Mode */
+.a11y-high-contrast {
+  --a11y-text-color: #fff;
+  --a11y-bg-color: #000;
+  --a11y-link-color: #ffff00;
+  --a11y-btn-bg: #ffffff;
+  --a11y-btn-text: #000000;
+  --a11y-focus-outline: 3px solid #ffff00;
+}
+
+.a11y-high-contrast .MuiPaper-root {
+  background-color: var(--a11y-bg-color) !important;
+  color: var(--a11y-text-color) !important;
+  border: 2px solid #fff !important;
+}
+
+.a11y-high-contrast .MuiAppBar-root,
+.a11y-high-contrast .MuiCard-root,
+.a11y-high-contrast .MuiAccordion-root,
+.a11y-high-contrast .MuiDialog-paper {
+  border: 2px solid #fff !important;
+}
+
+.a11y-high-contrast .MuiButton-root {
+  background-color: var(--a11y-btn-bg) !important;
+  color: var(--a11y-btn-text) !important;
+  border: 2px solid #fff !important;
+}
+
+.a11y-high-contrast a {
+  color: var(--a11y-link-color) !important;
+  text-decoration: underline !important;
+}
+
+.a11y-high-contrast *:focus {
+  outline: var(--a11y-focus-outline) !important;
+}
+
+.a11y-high-contrast .MuiDivider-root {
+  border-color: #fff !important;
+}
+
+/* Reduced Motion */
+.a11y-reduced-motion *,
+.a11y-reduced-motion *::before,
+.a11y-reduced-motion *::after {
+  animation-duration: 0.001ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.001ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* OpenDyslexic Font */
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/ttf/OpenDyslexic-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'OpenDyslexic';
+  src: url('https://cdn.jsdelivr.net/npm/open-dyslexic@1.0.3/ttf/OpenDyslexic-Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+}
+
+.a11y-dyslexic-font,
+.a11y-dyslexic-font button,
+.a11y-dyslexic-font input,
+.a11y-dyslexic-font textarea,
+.a11y-dyslexic-font select,
+.a11y-dyslexic-font h1,
+.a11y-dyslexic-font h2,
+.a11y-dyslexic-font h3,
+.a11y-dyslexic-font h4,
+.a11y-dyslexic-font h5,
+.a11y-dyslexic-font h6,
+.a11y-dyslexic-font p,
+.a11y-dyslexic-font span,
+.a11y-dyslexic-font div,
+.a11y-dyslexic-font li,
+.a11y-dyslexic-font a {
+  font-family: 'OpenDyslexic', sans-serif !important;
+  letter-spacing: 0.05em;
+  word-spacing: 0.1em;
+}
+
+/* Strong focus indicators for keyboard navigation */
+:focus-visible {
+  outline: 3px solid #0066cc !important;
+  outline-offset: 2px !important;
+}
+
+/* Skip links - ensure they're visible when focused */
+.skip-link:focus {
+  top: 0 !important;
+}
+
+/* Improve input field contrast */
+input, select, textarea {
+  border: 1px solid rgba(0, 0, 0, 0.42) !important;
+}
+
+/* Ensure buttons have enough contrast */
+button:not([disabled]) {
+  min-height: 44px;
+}
+
+/* Increase touch target sizes for mobile */
+@media (max-width: 600px) {
+  button, 
+  [role="button"],
+  a,
+  input[type="checkbox"],
+  input[type="radio"] {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

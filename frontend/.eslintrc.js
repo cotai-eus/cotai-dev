@@ -1,9 +1,8 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
   extends: [
-    'react-app',
-    'react-app/jest',
     'plugin:react/recommended',
+    'plugin:react-hooks/recommended',
     'plugin:@typescript-eslint/recommended',
     'prettier',
     'plugin:prettier/recommended',

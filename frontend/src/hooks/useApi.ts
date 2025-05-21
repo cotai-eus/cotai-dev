@@ -14,10 +14,10 @@ interface UseApiResponse<T> {
  * @param fetchFunction Função assíncrona que retorna os dados da API
  * @param immediate Se true, faz a requisição imediatamente ao montar o componente
  */
-const useApi = <T>(
+function useApi<T>(
   fetchFunction: () => Promise<T>,
   immediate = true
-): UseApiResponse<T> => {
+): UseApiResponse<T> {
   const [data, setData] = useState<T | null>(null);
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<Error | null>(null);
@@ -41,6 +41,7 @@ const useApi = <T>(
   }, [immediate]);
 
   return { data, status, error, refetch: fetchData };
-};
+}
 
+export { useApi };
 export default useApi;

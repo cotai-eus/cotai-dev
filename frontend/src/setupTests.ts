@@ -1,8 +1,18 @@
-// jest-dom adds custom jest matchers for asserting on DOM nodes.
-// allows you to do things like:
+// Configuração para os testes usando Vitest
+// '@testing-library/jest-dom' adiciona matchers personalizados para asserções em nós DOM
+// Permite fazer coisas como:
 // expect(element).toHaveTextContent(/react/i)
-// learn more: https://github.com/testing-library/jest-dom
 import '@testing-library/jest-dom';
+import { vi } from 'vitest';
+
+// Configuração global do Vitest
+import { afterEach, expect } from 'vitest';
+import { cleanup } from '@testing-library/react';
+
+// Limpa elementos montados após cada teste
+afterEach(() => {
+  cleanup();
+});
 
 // Mock do localStorage
 const localStorageMock = (function() {
@@ -31,14 +41,14 @@ Object.defineProperty(window, 'localStorage', {
 // Mock do matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: jest.fn().mockImplementation(query => ({
+  value: vi.fn().mockImplementation(query => ({
     matches: false,
     media: query,
     onchange: null,
-    addListener: jest.fn(), // Deprecated
-    removeListener: jest.fn(), // Deprecated
-    addEventListener: jest.fn(),
-    removeEventListener: jest.fn(),
-    dispatchEvent: jest.fn(),
+    addListener: vi.fn(), // Deprecated
+    removeListener: vi.fn(), // Deprecated
+    addEventListener: vi.fn(),
+    removeEventListener: vi.fn(),
+    dispatchEvent: vi.fn(),
   })),
 });

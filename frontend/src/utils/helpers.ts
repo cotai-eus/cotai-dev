@@ -1,12 +1,12 @@
 /**
  * Verifica se o ambiente atual é de produção
  */
-export const isProduction = process.env.NODE_ENV === 'production';
+export const isProduction = import.meta.env.MODE === 'production';
 
 /**
  * Verifica se o ambiente atual é de desenvolvimento
  */
-export const isDevelopment = process.env.NODE_ENV === 'development';
+export const isDevelopment = import.meta.env.MODE === 'development';
 
 /**
  * Delay para simulação em milissegundos (não use em produção)
@@ -23,7 +23,25 @@ export const delay = (ms: number): Promise<void> =>
  * @returns Valor da variável de ambiente ou o valor padrão
  */
 export const getEnv = (key: string, defaultValue = ''): string => {
-  return process.env[`REACT_APP_${key}`] || defaultValue;
+  return (import.meta.env[`VITE_${key}`] as string) || defaultValue;
+};
+
+/**
+ * Função de debounce para evitar chamadas repetidas
+ * @param func Função a ser executada após o debounce
+ * @param wait Tempo de espera em milissegundos
+ * @returns Função com debounce aplicado
+ */
+export const debounce = <T extends (...args: any[]) => any>(
+  func: T,
+  wait = 300
+): ((...args: Parameters<T>) => void) => {
+  let timeout: ReturnType<typeof setTimeout> | null = null;
+  
+  return function(...args: Parameters<T>) {
+    if (timeout) clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
 };
 
 /**

@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { Box, useMediaQuery, useTheme } from '@mui/material';
 import Sidebar from '../Sidebar';
 import Header from '../Header';
+import SkipLink from '../common/SkipLink';
 
 const MainLayout: React.FC = () => {
   const theme = useTheme();
@@ -15,6 +16,7 @@ const MainLayout: React.FC = () => {
 
   return (
     <Box sx={{ display: 'flex', height: '100vh' }}>
+      <SkipLink targetId="main-content" />
       <Sidebar open={sidebarOpen} onClose={toggleSidebar} />
       <Box
         component="main"
@@ -27,11 +29,14 @@ const MainLayout: React.FC = () => {
       >
         <Header toggleSidebar={toggleSidebar} />
         <Box
+          id="main-content"
           sx={{
             p: 3,
             flexGrow: 1,
             overflow: 'auto',
           }}
+          role="main"
+          tabIndex={-1}
         >
           <Outlet />
         </Box>

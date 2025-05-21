@@ -1,6 +1,7 @@
 from pydantic_settings import BaseSettings
 from typing import List, Optional
 import secrets
+import os
 
 
 class Settings(BaseSettings):
@@ -49,6 +50,23 @@ class Settings(BaseSettings):
     # OAuth settings
     GOOGLE_CLIENT_ID: Optional[str] = None
     GOOGLE_CLIENT_SECRET: Optional[str] = None
+    
+    # Document storage settings
+    DOCUMENT_STORAGE_PATH: str = os.path.join(os.getcwd(), "data", "documents")
+    DOCUMENT_MAX_SIZE: int = 20 * 1024 * 1024  # 20 MB
+    ALLOWED_DOCUMENT_TYPES: List[str] = [
+        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".csv", ".txt", 
+        ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".bmp"
+    ]
+    
+    # OCR settings
+    TESSERACT_PATH: Optional[str] = None  # Path to tesseract executable, if not in PATH
+    OCR_ENABLED: bool = True
+    OCR_LANGUAGE: str = "por"  # Default language for OCR (Portuguese)
+    
+    # Celery settings
+    CELERY_BROKER_URL: str = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0"
+    CELERY_RESULT_BACKEND: str = f"redis://:{REDIS_PASSWORD}@{REDIS_HOST}:{REDIS_PORT}/0"
     MICROSOFT_CLIENT_ID: Optional[str] = None
     MICROSOFT_CLIENT_SECRET: Optional[str] = None
     GITHUB_CLIENT_ID: Optional[str] = None

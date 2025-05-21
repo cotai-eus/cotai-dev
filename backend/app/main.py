@@ -12,6 +12,7 @@ from app.middleware.setup import setup_rate_limiting
 
 # Importação dos routers
 from app.api.routers.auth import router as auth_router
+from app.api.routers.document import router as document_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -64,6 +65,7 @@ async def health_check():
 
 # Incluir routers
 app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
+app.include_router(document_router, prefix=settings.API_V1_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn
