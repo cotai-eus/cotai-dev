@@ -189,7 +189,46 @@ class AlertService:
         
         logger.info(f"Alerta criado: {message} [severity={severity}]")
         
+        # Notifica via Webhook ou outros canais para alertas críticos
+        if severity == "critical":
+            await self._notify_critical_alert(alert)
+        
         return alert
+    
+    async def _notify_critical_alert(self, alert: MetricAlert) -> None:
+        """
+        Envia notificação para canais externos sobre um alerta crítico.
+        
+        Args:
+            alert: O alerta a ser notificado
+        """
+        try:
+            metric = await self.db.get(Metric, alert.metric_id)
+            if not metric:
+                logger.error(f"Não foi possível encontrar a métrica para o alerta {alert.id}")
+                return
+                
+            # Montar a mensagem de notificação
+            notification_data = {
+                "alert_id": alert.id,
+                "severity": alert.severity,
+                "metric_name": metric.name,
+                "metric_value": alert.value,
+                "metric_unit": metric.unit,
+                "message": alert.message,
+                "timestamp": alert.created_at.isoformat()
+            }
+            
+            # Adicionar código para integração com sistemas de notificação
+            # Exemplos: Slack, Email, SMS, etc.
+            logger.info(f"Notificação de alerta crítico enviada: {notification_data}")
+            
+            # TODO: Implementar integrações específicas com canais de notificação
+            # await self.notify_slack(notification_data)
+            # await self.notify_email(notification_data)
+            
+        except Exception as e:
+            logger.error(f"Erro ao notificar alerta crítico: {e}")
     
     async def acknowledge_alert(self, alert_id: int, user_id: int) -> MetricAlert:
         """

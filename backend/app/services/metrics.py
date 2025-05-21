@@ -56,6 +56,12 @@ class MetricsService:
         result = await self.db.execute(query)
         return result.scalar_one_or_none()
     
+    async def get_metric_by_name(self, name: str) -> Optional[Metric]:
+        """Recupera uma métrica pelo nome."""
+        query = select(Metric).where(Metric.name == name)
+        result = await self.db.execute(query)
+        return result.scalar_one_or_none()
+    
     @cached(key_prefix="metric_history", ttl_seconds=600)
     async def get_metric_history(
         self,

@@ -128,7 +128,14 @@ class MetricHistoryResponse(BaseModel):
     metric_id: int
     metric_name: str
     unit: Optional[str] = None
-    history: List[MetricHistoryItem]
+    period: Dict[str, Any]
+    data: List[Dict[str, Any]]
+
+
+class TimeRangeFilter(BaseModel):
+    """Filtro de intervalo de tempo para consultas."""
+    start_date: Optional[datetime] = Query(None, description="Data de início do período")
+    end_date: Optional[datetime] = Query(None, description="Data de fim do período")
 
 
 class MetricAggregationRequest(BaseModel):

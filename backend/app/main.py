@@ -9,11 +9,13 @@ from app.db.init_db import init_db, close_db_connections
 from app.db.redis import get_redis_client, close_redis_connection
 from app.middleware.rate_limiting import RateLimiter
 from app.middleware.setup import setup_rate_limiting
+from app.services.cache_invalidation import setup_cache_invalidation
 
 # Importação dos routers
 from app.api.routers.auth import router as auth_router
 from app.api.routers.document import router as document_router
 from app.api.routers.dashboard import router as dashboard_router
+from app.api.routers.metrics import router as metrics_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -50,6 +52,9 @@ async def startup_db_client():
     
     # Configurar rate limiting para rotas sensíveis
     setup_rate_limiting(app)
+    
+    # Iniciar serviço de invalidação de cache
+    await setup_cache_invalidation()
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
@@ -68,6 +73,7 @@ async def health_check():
 app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
 app.include_router(document_router, prefix=settings.API_V1_PREFIX)
 app.include_router(dashboard_router, prefix=settings.API_V1_PREFIX)
+app.include_router(metrics_router, prefix=settings.API_V1_PREFIX)
 
 if __name__ == "__main__":
     import uvicorn
