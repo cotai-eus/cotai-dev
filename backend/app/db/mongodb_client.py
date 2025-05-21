@@ -7,8 +7,6 @@ from pymongo.database import Database
 from pymongo.errors import ConnectionFailure
 
 from app.core.config import settings
-from loguru import logger
-from tenacity import retry, stop_after_attempt, wait_fixed
 
 # Singleton para o cliente MongoDB
 _mongo_client = None
@@ -20,7 +18,7 @@ def get_mongodb_client() -> MongoClient:
     """
     global _mongo_client
     if _mongo_client is None:
-        logger.info("Inicializando conexão com MongoDB")
+        print("Inicializando conexão com MongoDB")
         _mongo_client = MongoClient(
             settings.MONGODB_URI,
             maxPoolSize=10,
@@ -33,18 +31,16 @@ def get_mongodb_client() -> MongoClient:
         # Verificando a conexão
         try:
             _mongo_client.admin.command('ping')
-            logger.info("Conexão com MongoDB estabelecida com sucesso")
+            print("Conexão com MongoDB estabelecida com sucesso")
         except ConnectionFailure:
-            logger.error("Não foi possível se conectar ao MongoDB")
+            print("Não foi possível se conectar ao MongoDB")
             raise
     return _mongo_client
 
 
-@retry(stop=stop_after_attempt(5), wait=wait_fixed(1))
 def get_mongodb() -> Generator[Database, None, None]:
     """
     Dependency para obter uma conexão com o banco de dados MongoDB.
-    Implementa retry para lidar com falhas temporárias de conexão.
     """
     client = get_mongodb_client()
     try:
@@ -62,6 +58,6 @@ def close_mongodb_connection() -> None:
     """
     global _mongo_client
     if _mongo_client is not None:
-        logger.info("Fechando conexão com MongoDB")
+        print("Fechando conexão com MongoDB")
         _mongo_client.close()
         _mongo_client = None

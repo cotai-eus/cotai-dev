@@ -46,6 +46,27 @@ class Settings(BaseSettings):
     EMAILS_FROM_EMAIL: Optional[str] = None
     EMAILS_FROM_NAME: Optional[str] = None
     
+    # OAuth settings
+    GOOGLE_CLIENT_ID: Optional[str] = None
+    GOOGLE_CLIENT_SECRET: Optional[str] = None
+    MICROSOFT_CLIENT_ID: Optional[str] = None
+    MICROSOFT_CLIENT_SECRET: Optional[str] = None
+    GITHUB_CLIENT_ID: Optional[str] = None
+    GITHUB_CLIENT_SECRET: Optional[str] = None
+    
+    # Frontend URL for OAuth redirects
+    FRONTEND_URL: str = "http://localhost:3000"
+    
+    # 2FA settings
+    TOTP_ISSUER: str = "CotAi"
+    
+    # Security settings
+    PASSWORD_MIN_LENGTH: int = 8
+    PASSWORD_REQUIRE_UPPERCASE: bool = True
+    PASSWORD_REQUIRE_LOWERCASE: bool = True
+    PASSWORD_REQUIRE_DIGITS: bool = True
+    PASSWORD_REQUIRE_SPECIAL: bool = True
+    
     @property
     def SQLALCHEMY_DATABASE_URI(self) -> str:
         """Constrói a URI de conexão ao PostgreSQL."""
