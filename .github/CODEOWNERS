@@ -1,0 +1,32 @@
+# Definição de Code Owners para o projeto CotAi
+# Os Code Owners serão automaticamente solicitados para revisão quando alguém abrir um PR
+
+# Configuração global - solicita a revisão dos mantenedores principais para todos os arquivos
+*                   @organizacao/mantenedores
+
+# Backend
+/backend/           @organizacao/backend-team
+/backend/app/api/   @organizacao/api-team
+/backend/app/core/  @organizacao/core-team
+/backend/app/db/    @organizacao/db-team
+
+# Frontend
+/frontend/          @organizacao/frontend-team
+/frontend/src/components/ @organizacao/ui-team
+
+# Docker e DevOps
+/docker/            @organizacao/devops
+docker-compose.yml  @organizacao/devops
+/backend/Dockerfile @organizacao/devops
+/frontend/Dockerfile @organizacao/devops
+
+# GitHub Actions
+/.github/workflows/ @organizacao/devops
+
+# Docs
+/docs/              @organizacao/docs
+*.md                @organizacao/docs
+
+# Testes
+/backend/tests/     @organizacao/qa
+/frontend/src/**/*.test.* @organizacao/qa
