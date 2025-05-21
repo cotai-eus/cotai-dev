@@ -14,6 +14,7 @@ from app.models.metric import MetricType, AggregationType, TimeGranularity
 from app.services.metrics import MetricsService
 from app.services.alerts import AlertService
 from app.services.cache import cached, get_cache_service
+from app.services.advanced_cache import advanced_cached, get_advanced_cache_service
 from app.api.schemas.dashboard import (
     MetricResponse,
     MetricHistoryResponse,
@@ -52,7 +53,7 @@ async def list_metrics(
 
 
 @router.get("/kpi-summary", response_model=KPISummaryResponse)
-@cached(key_prefix="kpi_summary", ttl_seconds=300)
+@advanced_cached(key_prefix="kpi_summary", redis_ttl=300, memory_ttl=60)
 async def get_kpi_summary(
     time_range: TimeRangeFilter = Depends(),
     db: AsyncSession = Depends(get_async_session),
@@ -492,4 +493,124 @@ async def clear_metrics_cache(
         "pattern": pattern,
         "keys_removed": count,
         "keys": keys[:100]  # Limita a 100 chaves para não sobrecarregar a resposta
+    }
+
+
+# Endpoints para relatórios com cache no servidor
+@router.post("/reports/generate", status_code=status.HTTP_201_CREATED)
+async def generate_report(
+    report_type: str = Query(..., description="Tipo de relatório a ser gerado"),
+    time_range: TimeRangeFilter = Depends(),
+    filters: Dict[str, Any] = Body({}, description="Filtros adicionais para o relatório"),
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Gera um relatório e armazena em cache no servidor.
+    Retorna um ID para recuperar o relatório posteriormente.
+    """
+    # Obtém serviço de cache avançado
+    advanced_cache = await get_advanced_cache_service()
+    
+    # Usar a data atual se end_date não for fornecido
+    end_date = time_range.end_date or datetime.utcnow()
+    
+    # Usar 30 dias atrás se start_date não for fornecido
+    start_date = time_range.start_date or (end_date - timedelta(days=30))
+    
+    # Obter métricas para o relatório
+    metrics_service = MetricsService(db)
+    
+    if report_type == "kpi_summary":
+        # Gerar relatório de resumo de KPIs
+        report_data = await metrics_service.get_kpi_summary(
+            start_date=start_date,
+            end_date=end_date,
+            user_id=current_user.id,
+            **filters
+        )
+    elif report_type == "performance_analysis":
+        # Relatório de análise de desempenho
+        report_data = await metrics_service.get_performance_metrics(
+            start_date=start_date,
+            end_date=end_date,
+            user_id=current_user.id,
+            **filters
+        )
+    elif report_type == "conversion_rates":
+        # Relatório de taxas de conversão
+        report_data = await metrics_service.get_conversion_metrics(
+            start_date=start_date,
+            end_date=end_date,
+            user_id=current_user.id,
+            **filters
+        )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Tipo de relatório não suportado: {report_type}"
+        )
+    
+    # Armazenar relatório em cache
+    report_id = await advanced_cache.cache_report(
+        report_type=report_type,
+        report_data=report_data,
+        user_id=current_user.id,
+        ttl_seconds=3600  # 1 hora
+    )
+    
+    return {
+        "report_id": report_id,
+        "report_type": report_type,
+        "expires_in": 3600,  # 1 hora em segundos
+        "message": "Relatório gerado com sucesso e armazenado em cache"
+    }
+
+
+@router.get("/reports/{report_type}/{report_id}")
+async def get_cached_report(
+    report_type: str,
+    report_id: str,
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Recupera um relatório previamente gerado do cache do servidor.
+    """
+    # Obtém serviço de cache avançado
+    advanced_cache = await get_advanced_cache_service()
+    
+    # Recupera o relatório do cache
+    report = await advanced_cache.get_report(
+        report_type=report_type,
+        report_id=report_id,
+        user_id=current_user.id
+    )
+    
+    if not report:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Relatório não encontrado ou expirado"
+        )
+    
+    return report
+
+
+@router.get("/reports")
+async def list_user_reports(
+    db: AsyncSession = Depends(get_async_session),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Lista todos os relatórios em cache para o usuário atual.
+    """
+    # Obtém serviço de cache avançado
+    advanced_cache = await get_advanced_cache_service()
+    
+    # Lista os relatórios do usuário
+    reports = await advanced_cache.list_user_reports(user_id=current_user.id)
+    
+    return {
+        "reports": reports,
+        "count": len(reports)
     }

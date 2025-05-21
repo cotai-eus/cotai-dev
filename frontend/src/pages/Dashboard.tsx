@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { 
   Grid, 
   Typography, 
@@ -14,11 +14,18 @@ import {
 import { Refresh, AnalyticsOutlined, ShowChart, PieChart } from '@mui/icons-material';
 import "react-datepicker/dist/react-datepicker.css";
 
-// Importando componentes personalizados do dashboard
-import MetricCard from '../components/dashboard/MetricCard';
-import TimeFilter, { FilterState, DateRange } from '../components/dashboard/TimeFilter';
-import DashboardChart, { MetricDataPoint } from '../components/dashboard/DashboardChart';
-import Recommendations, { RecommendationData } from '../components/dashboard/Recommendations';
+// Importing lazy loaded components
+import { 
+  LazyMetricCard, 
+  LazyDashboardChart, 
+  LazyRecommendations, 
+  LazyTimeFilter 
+} from '../components/dashboard';
+
+// Regular import for types
+import { RecommendationData } from '../components/dashboard/Recommendations';
+import { FilterState, DateRange } from '../components/dashboard/TimeFilter';
+import { MetricDataPoint } from '../components/dashboard/DashboardChart';
 
 // Importando serviços e utilitários
 import MetricsService, { KPIItem, MetricFilter } from '../services/metrics';
@@ -58,6 +65,15 @@ const Dashboard: React.FC = () => {
     message: '',
     severity: 'info'
   });
+
+  // Memoize metrics to prevent recalculation on every render
+  const memoizedMetrics = useMemo(() => metrics, [metrics]);
+  
+  // Memoize chart data to prevent recalculation on every render
+  const memoizedChartData = useMemo(() => chartData, [chartData]);
+  
+  // Memoize recommendations to prevent recalculation on every render
+  const memoizedRecommendations = useMemo(() => recommendations, [recommendations]);
 
   // Carregar métricas do dashboard
   const loadDashboardData = useCallback(async () => {
@@ -265,15 +281,15 @@ const Dashboard: React.FC = () => {
   };
 
   // Renderizar os cards de métricas
-  const renderMetricCards = () => {
-    const pendingQuotesMetric = metrics.find(m => m.name.includes('Pendentes'));
-    const successRateMetric = metrics.find(m => m.name.includes('Sucesso'));
-    const savingsMetric = metrics.find(m => m.name.includes('Economia'));
+  const renderMetricCards = useMemo(() => {
+    const pendingQuotesMetric = memoizedMetrics.find(m => m.name.includes('Pendentes'));
+    const successRateMetric = memoizedMetrics.find(m => m.name.includes('Sucesso'));
+    const savingsMetric = memoizedMetrics.find(m => m.name.includes('Economia'));
     
     return (
       <>
         <Grid item xs={12} sm={6} md={4}>
-          <MetricCard
+          <LazyMetricCard
             title="Cotações Pendentes"
             value={pendingQuotesMetric?.current_value || 0}
             description="Número de cotações aguardando processamento ou resposta"
@@ -284,7 +300,7 @@ const Dashboard: React.FC = () => {
         </Grid>
         
         <Grid item xs={12} sm={6} md={4}>
-          <MetricCard
+          <LazyMetricCard
             title="Taxa de Sucesso"
             value={successRateMetric?.current_value || 0}
             unit="%"
@@ -296,7 +312,7 @@ const Dashboard: React.FC = () => {
         </Grid>
         
         <Grid item xs={12} sm={6} md={4}>
-          <MetricCard
+          <LazyMetricCard
             title="Economia Total"
             value={savingsMetric?.current_value_text || `R$ ${savingsMetric?.current_value || 0}`}
             description="Economia total obtida com o sistema"
@@ -307,6 +323,7 @@ const Dashboard: React.FC = () => {
         </Grid>
       </>
     );
+  }, [memoizedMetrics, loading]);
   };
 
   return (
@@ -332,7 +349,7 @@ const Dashboard: React.FC = () => {
       </Box>
       
       {/* Filtros de tempo */}
-      <TimeFilter
+      <LazyTimeFilter
         onFilterChange={handleFilterChange}
         onExport={handleExportReport}
         onRefresh={handleRefresh}
@@ -362,14 +379,14 @@ const Dashboard: React.FC = () => {
       
       <Grid container spacing={3}>
         {/* Cards de métricas */}
-        {renderMetricCards()}
+        {renderMetricCards}
         
         {/* Gráfico principal */}
         <Grid item xs={12} lg={8}>
-          <DashboardChart
+          <LazyDashboardChart
             title="Desempenho de Cotações"
             description="Evolução dos principais indicadores ao longo do tempo"
-            data={chartData}
+            data={memoizedChartData}
             series={[
               { key: 'cotacoes', name: 'Cotações', color: '#4169E1', type: 'bar' },
               { key: 'taxaSucesso', name: 'Taxa de Sucesso (%)', color: '#32CD32', type: 'line' },
@@ -383,8 +400,8 @@ const Dashboard: React.FC = () => {
         
         {/* Recomendações */}
         <Grid item xs={12} lg={4}>
-          <Recommendations
-            recommendations={recommendations}
+          <LazyRecommendations
+            recommendations={memoizedRecommendations}
             loading={loading}
             maxItems={5}
             onActionClick={handleRecommendationAction}
@@ -393,7 +410,7 @@ const Dashboard: React.FC = () => {
         
         {/* Cotações por status e categoria em formato de chart */}
         <Grid item xs={12} md={6}>
-          <DashboardChart
+          <LazyDashboardChart
             title="Cotações por Status"
             description="Distribuição das cotações por status atual"
             data={[
@@ -416,7 +433,7 @@ const Dashboard: React.FC = () => {
         
         {/* Economia por categoria */}
         <Grid item xs={12} md={6}>
-          <DashboardChart
+          <LazyDashboardChart
             title="Economia por Categoria"
             description="Distribuição da economia por categoria de produtos"
             data={[
@@ -457,4 +474,4 @@ const Dashboard: React.FC = () => {
   );
 };
 
-export default Dashboard;
+export default React.memo(Dashboard);

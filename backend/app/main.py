@@ -2,6 +2,7 @@
 
 from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 import redis
 
 from app.core.config import settings
@@ -9,6 +10,7 @@ from app.db.init_db import init_db, close_db_connections
 from app.db.redis import get_redis_client, close_redis_connection
 from app.middleware.rate_limiting import RateLimiter
 from app.middleware.setup import setup_rate_limiting
+from app.middleware.compression import setup_compression
 from app.services.cache_invalidation import setup_cache_invalidation
 
 # Importação dos routers
@@ -36,6 +38,9 @@ app.add_middleware(
 
 # Configuração do rate limiter global (opcional, pois também aplicamos por rota)
 # app.add_middleware(RateLimiter, times=100, seconds=60)
+
+# Aplicar middleware de compressão
+setup_compression(app, min_size=1000)  # Comprimir respostas maiores que 1KB
 
 # Eventos de inicialização e desligamento
 @app.on_event("startup")

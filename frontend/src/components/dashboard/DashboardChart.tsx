@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, memo, useMemo } from 'react';
 import { 
   ResponsiveContainer, 
   ComposedChart, 
@@ -331,4 +331,13 @@ const DashboardChart: React.FC<DashboardChartProps> = ({
   );
 };
 
-export default DashboardChart;
+// Memoize the chart component to prevent unnecessary re-renders
+export default memo(DashboardChart, (prevProps, nextProps) => {
+  // Only re-render if these props change
+  return (
+    prevProps.title === nextProps.title &&
+    prevProps.data === nextProps.data &&
+    prevProps.loading === nextProps.loading &&
+    JSON.stringify(prevProps.series) === JSON.stringify(nextProps.series)
+  );
+});

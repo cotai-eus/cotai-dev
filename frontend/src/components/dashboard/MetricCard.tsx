@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { memo } from 'react';
 import { Paper, Typography, Box, Tooltip, CircularProgress } from '@mui/material';
 import { InfoOutlined, TrendingUp, TrendingDown, TrendingFlat } from '@mui/icons-material';
 
@@ -127,4 +127,15 @@ const MetricCard: React.FC<MetricCardProps> = ({
   );
 };
 
-export default MetricCard;
+// Memoize the component to prevent unnecessary renders when props don't change
+export default memo(MetricCard, (prevProps, nextProps) => {
+  // Custom comparison function for when to skip re-rendering
+  // Only re-render if any of these props have changed
+  return (
+    prevProps.title === nextProps.title &&
+    prevProps.value === nextProps.value &&
+    prevProps.unit === nextProps.unit &&
+    prevProps.percentChange === nextProps.percentChange &&
+    prevProps.loading === nextProps.loading
+  );
+});
