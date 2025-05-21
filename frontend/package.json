@@ -4,8 +4,8 @@
   "private": true,
   "dependencies": {
     "@chakra-ui/react": "^3.19.1",
-    "@emoji-mart/data": "^2.0.8",
-    "@emoji-mart/react": "^2.0.0",
+    "@emoji-mart/data": "^1.0.0",
+    "@emoji-mart/react": "^1.0.0",
     "@emotion/react": "^11.11.0",
     "@emotion/styled": "^11.11.0",
     "@mui/icons-material": "^5.11.16",
@@ -48,6 +48,11 @@
     "build": "tsc && vite build",
     "preview": "vite preview",
     "test": "vitest",
+    "test:coverage": "vitest --coverage",
+    "test:e2e": "start-server-and-test dev 5173 cypress:open",
+    "test:e2e:ci": "start-server-and-test dev 5173 cypress:run",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
     "lint": "eslint .",
     "lint:fix": "eslint --fix .",
     "format": "prettier --write 'src/**/*.{js,jsx,ts,tsx,css,md,json}'"

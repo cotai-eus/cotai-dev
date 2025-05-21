@@ -1,0 +1,15 @@
+{
+  "baseUrl": "http://localhost:5173",
+  "viewportWidth": 1280,
+  "viewportHeight": 720,
+  "video": false,
+  "screenshotOnRunFailure": true,
+  "retries": {
+    "runMode": 1,
+    "openMode": 0
+  },
+  "env": {
+    "apiUrl": "http://localhost:8000"
+  },
+  "experimentalStudio": true
+}
