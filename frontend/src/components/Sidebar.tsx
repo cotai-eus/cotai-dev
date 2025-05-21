@@ -114,26 +114,9 @@ const Sidebar: React.FC<SidebarProps> = ({ open, onClose }) => {
       ]
     },
     {
-      text: 'Cotações',
+      text: 'Cotações & Riscos',
       icon: <AssessmentIcon />,
-      path: '/quotations',
-      subItems: [
-        {
-          text: 'Nova Cotação',
-          icon: <AddIcon />,
-          path: '/quotations/new'
-        },
-        {
-          text: 'Listar Cotações',
-          icon: <ListIcon />,
-          path: '/quotations/list'
-        },
-        {
-          text: 'Relatórios',
-          icon: <BarChartIcon />,
-          path: '/quotations/reports'
-        }
-      ]
+      path: '/quotations'
     }
   ];
 

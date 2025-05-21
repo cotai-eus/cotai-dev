@@ -15,6 +15,7 @@ const Register = lazy(() => import('./pages/Register'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 const ComponentDemo = lazy(() => import('./pages/ComponentDemo'));
 const MessagesPage = lazy(() => import('./pages/MessagesPage'));
+const QuotationsPage = lazy(() => import('./pages/QuotationsPage'));
 
 interface PrivateRouteProps {
   children: React.ReactNode;
@@ -54,6 +55,7 @@ const App: React.FC = () => {
               <Route path="dashboard" element={<Dashboard />} />
               <Route path="messages" element={<MessagesPage />} />
               <Route path="components" element={<ComponentDemo />} />
+              <Route path="quotations" element={<QuotationsPage />} />
               {/* Adicionar mais rotas protegidas aqui */}
               </Route>
               
