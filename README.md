@@ -143,3 +143,58 @@ Por favor, leia [CONTRIBUTING.md](CONTRIBUTING.md) para detalhes sobre nosso có
 ## Licença
 
 Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICENSE) para detalhes.
+
+## Ambientes
+
+### Desenvolvimento
+
+Para iniciar o ambiente de desenvolvimento:
+
+```bash
+docker-compose up -d
+```
+
+Isso iniciará todos os serviços necessários para desenvolvimento local.
+
+### Produção
+
+O CotAi está configurado para um ambiente de produção robusto e escalável. Para mais detalhes, consulte:
+
+- [Configuração de Produção](PRODUCTION_SETUP.md) - Guia detalhado de configuração
+- [Plano de Recuperação de Desastres](DISASTER_RECOVERY.md) - Procedimentos para recuperação
+- [Resumo da Produção](PRODUCTION_SUMMARY.md) - Visão geral da configuração
+
+Para iniciar o ambiente de produção:
+
+```bash
+# Copie o arquivo de exemplo e configure as variáveis
+cp .env.production.sample .env.production
+nano .env.production
+
+# Inicie os serviços
+docker-compose -f docker-compose.production.yml up -d
+```
+
+#### Principais Características do Ambiente de Produção
+
+1. **Alta Disponibilidade**
+   - Balanceamento de carga com Nginx
+   - Replicação de PostgreSQL
+   - Clusters MongoDB
+
+2. **Escalabilidade**
+   - Serviços escaláveis horizontalmente
+   - Configuração otimizada para desempenho
+
+3. **Segurança**
+   - HTTPS com certificados SSL/TLS
+   - Cabeçalhos de segurança configurados
+   - Redes isoladas para bancos de dados
+
+4. **Monitoramento e Logs**
+   - Stack Prometheus/Grafana para métricas
+   - Sistema Loki/Promtail para logs centralizados
+
+5. **Backup e Recuperação**
+   - Backups automáticos diários
+   - Procedimentos detalhados de recuperação
