@@ -92,10 +92,9 @@ services:
     restart: unless-stopped
     volumes:
       - mongodb-data:/data/db
-      - ./docker/mongodb/mongod.conf:/etc/mongod.conf
     env_file:
       - .env
-    command: --config /etc/mongod.conf
+    command: mongod --bind_ip 0.0.0.0
     networks:
       - database-network
     healthcheck:

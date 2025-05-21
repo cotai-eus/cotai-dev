@@ -52,8 +52,8 @@ If the application services (backend, frontend) fail:
 2. If the issue persists, manually restart the services:
 
 ```bash
-docker-compose -f docker-compose.production.yml stop backend frontend
-docker-compose -f docker-compose.production.yml up -d backend frontend
+docker compose -f docker compose.production.yml stop backend frontend
+docker compose -f docker compose.production.yml up -d backend frontend
 ```
 
 ### 3. Complete System Failure
@@ -68,7 +68,7 @@ In case of a complete system failure:
 6. Start the services:
 
 ```bash
-docker-compose -f docker-compose.production.yml up -d
+docker compose -f docker compose.production.yml up -d
 ```
 
 ## Backup Restoration

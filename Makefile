@@ -13,23 +13,23 @@ setup: ## Instala dependências e configura ambiente
 
 .PHONY: dev
 dev: ## Inicia os contêineres em modo de desenvolvimento
-	docker-compose up
+	docker compose up
 
 .PHONY: prod
 prod: ## Inicia os contêineres em modo de produção
-	BACKEND_TARGET=production FRONTEND_TARGET=production docker-compose up -d
+	BACKEND_TARGET=production FRONTEND_TARGET=production docker compose up -d
 
 .PHONY: down
 down: ## Para todos os contêineres
-	docker-compose down
+	docker compose down
 
 .PHONY: logs
 logs: ## Exibe logs de todos os contêineres
-	docker-compose logs -f
+	docker compose logs -f
 
 .PHONY: backend-shell
 backend-shell: ## Abre um shell no contêiner backend
-	docker-compose exec backend /bin/bash
+	docker compose exec backend /bin/bash
 
 .PHONY: format
 format: ## Formata o código backend com black e isort

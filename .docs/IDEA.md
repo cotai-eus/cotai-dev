@@ -57,7 +57,7 @@ cotai-dev/
 │   │   └── utils/
 │   ├── package.json
 │   └── tsconfig.json
-├── docker-compose.yml
+├── docker compose.yml
 ├── .github/
 │   └── workflows/
 └── README.md

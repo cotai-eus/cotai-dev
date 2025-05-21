@@ -33,7 +33,7 @@ cotai-dev/
 │   ├── tsconfig.json    # Configuração TypeScript
 │   └── Dockerfile       # Configuração Docker para o frontend
 ├── docker/              # Configurações para serviços Docker
-├── docker-compose.yml   # Configuração completa dos serviços
+├── docker compose.yml   # Configuração completa dos serviços
 ├── .github/             # Configurações do GitHub
 ├── .env.template        # Template para variáveis de ambiente
 └── README.md            # Este arquivo
@@ -50,7 +50,7 @@ cotai-dev/
 
 1. Clone o repositório:
    ```bash
-   git clone https://github.com/sua-org/cotai-dev.git
+   git clone https://github.com/eus-cotai/cotai-dev.git
    cd cotai-dev
    ```
 
@@ -151,7 +151,7 @@ Este projeto está licenciado sob a licença MIT - veja o arquivo [LICENSE](LICE
 Para iniciar o ambiente de desenvolvimento:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
 Isso iniciará todos os serviços necessários para desenvolvimento local.
@@ -172,7 +172,7 @@ cp .env.production.sample .env.production
 nano .env.production
 
 # Inicie os serviços
-docker-compose -f docker-compose.production.yml up -d
+docker compose -f docker compose.production.yml up -d
 ```
 
 #### Principais Características do Ambiente de Produção

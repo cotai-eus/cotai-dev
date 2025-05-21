@@ -16,7 +16,7 @@
 
 # Docker e DevOps
 /docker/            @organizacao/devops
-docker-compose.yml  @organizacao/devops
+docker compose.yml  @organizacao/devops
 /backend/Dockerfile @organizacao/devops
 /frontend/Dockerfile @organizacao/devops
 

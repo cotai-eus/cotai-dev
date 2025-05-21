@@ -5,7 +5,7 @@ This document summarizes the configuration for the CotAi production environment.
 ## Completed Tasks
 
 ### 1. Docker Compose for Production
-- Created a comprehensive `docker-compose.production.yml` file
+- Created a comprehensive `docker compose.production.yml` file
 - Configured all services to use production-ready images and settings
 - Set up proper environment variables and dependencies
 - Enabled scaling for backend, frontend, and worker services
@@ -62,7 +62,7 @@ This document summarizes the configuration for the CotAi production environment.
 
 ## How to Use
 1. Update the `.env.production.sample` file with your values and rename to `.env.production`
-2. Run the services with `docker-compose -f docker-compose.production.yml up -d`
+2. Run the services with `docker compose -f docker compose.production.yml up -d`
 3. Follow the documentation in `PRODUCTION_SETUP.md` for additional steps
 
 ## Next Steps

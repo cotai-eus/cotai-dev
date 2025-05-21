@@ -117,12 +117,12 @@ jobs:
     
     - name: Build and test Docker images
       run: |
-        docker-compose build
-        docker-compose -f docker-compose.yml up -d
+        docker compose build
+        docker compose -f docker compose.yml up -d
         sleep 30
-        docker-compose ps
-        docker-compose logs
-        docker-compose down
+        docker compose ps
+        docker compose logs
+        docker compose down
     
     # Aqui você adicionaria passos para push para o registro de contêineres
     # e deployment para ambientes de homologação/produção

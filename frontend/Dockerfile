@@ -11,8 +11,8 @@ WORKDIR /app
 FROM base AS development
 
 # Install dependencies
-COPY package.json package-lock.json* ./
-RUN npm ci
+COPY package.json yarn.lock ./
+RUN yarn install --frozen-lockfile
 
 # Copy the rest of the application
 COPY . .
@@ -25,22 +25,22 @@ HEALTHCHECK --interval=30s --timeout=30s --start-period=10s --retries=3 \
     CMD wget -qO- http://localhost:3000/ || exit 1
 
 # Start development server
-CMD ["npm", "run", "start"]
+CMD ["yarn", "dev"]
 
 # Stage 3: Build image
 FROM base AS build
 
 # Copy dependency definitions
-COPY package.json package-lock.json* ./
+COPY package.json yarn.lock ./
 
 # Install dependencies
-RUN npm ci
+RUN yarn install --frozen-lockfile --production
 
 # Copy the rest of the application
 COPY . .
 
 # Build the application
-RUN npm run build
+RUN yarn build
 
 # Stage 4: Production image
 FROM nginx:alpine AS production

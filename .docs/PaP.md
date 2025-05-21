@@ -22,7 +22,7 @@ Requisitos:
 - Optimize as imagens para desenvolvimento e produção
 - Siga as melhores práticas de segurança para contêineres
 
-Crie um Dockerfile para o backend e outro para o frontend, além do docker-compose.yml principal.
+Crie um Dockerfile para o backend e outro para o frontend, além do docker compose.yml principal.
 ```
 
 ### Prompt 2: Estrutura Inicial do Projeto e GitHub Setup

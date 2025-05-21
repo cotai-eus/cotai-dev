@@ -47,7 +47,7 @@ The production environment is configured with the following components:
 
 4. Start the services:
    ```bash
-   docker-compose -f docker-compose.production.yml up -d
+   docker compose -f docker compose.production.yml up -d
    ```
 
 ### SSL Certificate Setup
@@ -56,7 +56,7 @@ For a production environment, you should use valid SSL certificates:
 
 1. Initialize SSL certificates with Let's Encrypt:
    ```bash
-   docker-compose -f docker-compose.production.yml run --rm certbot certonly --webroot -w /var/www/certbot -d yourdomain.com -d www.yourdomain.com
+   docker compose -f docker compose.production.yml run --rm certbot certonly --webroot -w /var/www/certbot -d yourdomain.com -d www.yourdomain.com
    ```
 
 2. Configure Nginx to use the certificates:
@@ -68,7 +68,7 @@ For a production environment, you should use valid SSL certificates:
 To scale services:
 
 ```bash
-docker-compose -f docker-compose.production.yml up -d --scale backend=3 --scale frontend=2 --scale celery-worker=4
+docker compose -f docker compose.production.yml up -d --scale backend=3 --scale frontend=2 --scale celery-worker=4
 ```
 
 ## Monitoring
@@ -88,7 +88,7 @@ Automated backups run daily and are stored in the `/backups` directory. See the 
 All services have health checks configured. You can monitor the health status:
 
 ```bash
-docker-compose -f docker-compose.production.yml ps
+docker compose -f docker compose.production.yml ps
 ```
 
 ## Troubleshooting
@@ -96,7 +96,7 @@ docker-compose -f docker-compose.production.yml ps
 See the logs for any service:
 
 ```bash
-docker-compose -f docker-compose.production.yml logs -f [service-name]
+docker compose -f docker compose.production.yml logs -f [service-name]
 ```
 
 ## Security Considerations
