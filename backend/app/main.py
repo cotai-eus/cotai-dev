@@ -16,6 +16,7 @@ from app.api.routers.auth import router as auth_router
 from app.api.routers.document import router as document_router
 from app.api.routers.dashboard import router as dashboard_router
 from app.api.routers.metrics import router as metrics_router
+from app.api.routers.messages import router as messages_router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -74,6 +75,7 @@ app.include_router(auth_router, prefix=settings.API_V1_PREFIX)
 app.include_router(document_router, prefix=settings.API_V1_PREFIX)
 app.include_router(dashboard_router, prefix=settings.API_V1_PREFIX)
 app.include_router(metrics_router, prefix=settings.API_V1_PREFIX)
+app.include_router(messages_router, prefix=settings.API_V1_PREFIX + "/messaging")
 
 if __name__ == "__main__":
     import uvicorn

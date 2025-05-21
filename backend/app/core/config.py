@@ -59,6 +59,14 @@ class Settings(BaseSettings):
         ".jpg", ".jpeg", ".png", ".tiff", ".tif", ".bmp"
     ]
     
+    # Upload settings
+    UPLOAD_DIRECTORY: str = os.path.join(os.getcwd(), "data", "uploads")
+    UPLOAD_MAX_SIZE: int = 10 * 1024 * 1024  # 10 MB
+    ALLOWED_UPLOAD_TYPES: List[str] = [
+        ".pdf", ".doc", ".docx", ".xls", ".xlsx", ".csv", ".txt",
+        ".jpg", ".jpeg", ".png", ".gif", ".mp3", ".mp4", ".zip"
+    ]
+    
     # OCR settings
     TESSERACT_PATH: Optional[str] = None  # Path to tesseract executable, if not in PATH
     OCR_ENABLED: bool = True
