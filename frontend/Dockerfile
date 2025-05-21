@@ -2,7 +2,7 @@
 # Multi-stage build for optimized production image
 
 # Stage 1: Base image for dependencies
-FROM node:18-alpine AS base
+FROM node:20-alpine AS base
 
 # Set working directory
 WORKDIR /app
