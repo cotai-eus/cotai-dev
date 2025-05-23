@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError, DataError
 
 from app.main import app
 from app.models.quotation import (
@@ -150,7 +151,9 @@ class TestQuotationAPI:
         # Setup repository mock
         mock_repositories["quotation_repository"].create_quotation.return_value = mock_quotation
         mock_repositories["quotation_repository"].get_quotation_by_id.return_value = mock_quotation
-        
+        # Mock tag validation to pass by default for this test
+        mock_repositories["quotation_tag_repository"].get_tag_by_id.return_value = MagicMock()
+
         # Test data
         data = {
             "reference_id": "QT-20250101-0001",
@@ -179,7 +182,75 @@ class TestQuotationAPI:
         # Check response
         assert response.status_code == 201
         assert mock_repositories["quotation_repository"].create_quotation.called
-    
+
+    # Tests for create_quotation error handling
+    def test_create_quotation_integrity_error(self, client, mock_repositories):
+        """Test creating a quotation with IntegrityError"""
+        mock_repositories["quotation_tag_repository"].get_tag_by_id.return_value = MagicMock() # Assume tags are valid
+        mock_repositories["quotation_repository"].create_quotation.side_effect = IntegrityError("mocked integrity error", params=None, orig=None)
+        data = {
+            "reference_id": "QT-INT-ERR-001", "title": "Integrity Error Test", "customer_id": 1,
+            "items": [{"name": "item1", "quantity": 1, "unit_cost": 10, "unit_price": 15}]
+        }
+        response = client.post("/api/v1/quotations", json=data)
+        assert response.status_code == 409
+        assert "conflict" in response.json()["detail"].lower()
+
+    def test_create_quotation_data_error(self, client, mock_repositories):
+        """Test creating a quotation with DataError"""
+        mock_repositories["quotation_tag_repository"].get_tag_by_id.return_value = MagicMock() # Assume tags are valid
+        mock_repositories["quotation_repository"].create_quotation.side_effect = DataError("mocked data error", params=None, orig=None)
+        data = {
+            "reference_id": "QT-DATA-ERR-001", "title": "Data Error Test", "customer_id": 1,
+            "items": [{"name": "item1", "quantity": 1, "unit_cost": 10, "unit_price": 15}]
+        }
+        response = client.post("/api/v1/quotations", json=data)
+        assert response.status_code == 422
+        assert "invalid data" in response.json()["detail"].lower()
+
+    def test_create_quotation_generic_exception(self, client, mock_repositories):
+        """Test creating a quotation with a generic Exception"""
+        mock_repositories["quotation_tag_repository"].get_tag_by_id.return_value = MagicMock() # Assume tags are valid
+        mock_repositories["quotation_repository"].create_quotation.side_effect = Exception("mocked generic exception")
+        data = {
+            "reference_id": "QT-GEN-ERR-001", "title": "Generic Exception Test", "customer_id": 1,
+            "items": [{"name": "item1", "quantity": 1, "unit_cost": 10, "unit_price": 15}]
+        }
+        response = client.post("/api/v1/quotations", json=data)
+        assert response.status_code == 500
+        assert "unexpected error" in response.json()["detail"].lower()
+
+    # Tests for tag_ids validation in create_quotation
+    def test_create_quotation_invalid_tag_id(self, client, mock_repositories):
+        """Test creating a quotation with an invalid tag_id"""
+        mock_repositories["quotation_tag_repository"].get_tag_by_id.return_value = None # Mock tag not found
+        data = {
+            "reference_id": "QT-INV-TAG-001", "title": "Invalid Tag Test", "customer_id": 1,
+            "tag_ids": [999], # Assuming 999 is an invalid tag_id
+            "items": [{"name": "item1", "quantity": 1, "unit_cost": 10, "unit_price": 15}]
+        }
+        response = client.post("/api/v1/quotations", json=data)
+        assert response.status_code == 422
+        assert "invalid tag_id" in response.json()["detail"].lower()
+        assert "999" in response.json()["detail"]
+
+    def test_create_quotation_valid_tag_ids(self, client, mock_repositories, mock_quotation):
+        """Test creating a quotation with valid tag_ids"""
+        mock_repositories["quotation_tag_repository"].get_tag_by_id.return_value = MagicMock(id=1, name="Valid Tag")
+        mock_repositories["quotation_repository"].create_quotation.return_value = mock_quotation
+        mock_repositories["quotation_repository"].get_quotation_by_id.return_value = mock_quotation
+        
+        data = {
+            "reference_id": "QT-VALID-TAG-001", "title": "Valid Tag Test", "customer_id": 1,
+            "tag_ids": [1], # Assuming 1 is a valid tag_id
+            "items": [{"name": "item1", "quantity": 1, "unit_cost": 10, "unit_price": 15}]
+        }
+        response = client.post("/api/v1/quotations", json=data)
+        assert response.status_code == 201 # Should be successful
+        assert mock_repositories["quotation_repository"].create_quotation.called
+        # Verify get_tag_by_id was called for each tag_id
+        mock_repositories["quotation_tag_repository"].get_tag_by_id.assert_called_with(db_session=AsyncMock(), tag_id=1)
+
     def test_get_quotations(self, client, mock_repositories, mock_quotation):
         """Test getting quotations list"""
         # Setup repository mock
@@ -235,7 +306,35 @@ class TestQuotationAPI:
         # Check response
         assert response.status_code == 200
         assert mock_repositories["quotation_repository"].update_quotation.called
-    
+
+    # Tests for update_quotation error handling
+    def test_update_quotation_integrity_error(self, client, mock_repositories, mock_quotation):
+        """Test updating a quotation with IntegrityError"""
+        mock_repositories["quotation_repository"].get_quotation_by_id.return_value = mock_quotation
+        mock_repositories["quotation_repository"].update_quotation.side_effect = IntegrityError("mocked integrity error", params=None, orig=None)
+        data = {"title": "Update Integrity Error"}
+        response = client.put("/api/v1/quotations/1", json=data)
+        assert response.status_code == 409
+        assert "conflict" in response.json()["detail"].lower()
+
+    def test_update_quotation_data_error(self, client, mock_repositories, mock_quotation):
+        """Test updating a quotation with DataError"""
+        mock_repositories["quotation_repository"].get_quotation_by_id.return_value = mock_quotation
+        mock_repositories["quotation_repository"].update_quotation.side_effect = DataError("mocked data error", params=None, orig=None)
+        data = {"title": "Update Data Error"}
+        response = client.put("/api/v1/quotations/1", json=data)
+        assert response.status_code == 422
+        assert "invalid data" in response.json()["detail"].lower()
+
+    def test_update_quotation_generic_exception(self, client, mock_repositories, mock_quotation):
+        """Test updating a quotation with a generic Exception"""
+        mock_repositories["quotation_repository"].get_quotation_by_id.return_value = mock_quotation
+        mock_repositories["quotation_repository"].update_quotation.side_effect = Exception("mocked generic exception")
+        data = {"title": "Update Generic Exception"}
+        response = client.put("/api/v1/quotations/1", json=data)
+        assert response.status_code == 500
+        assert "unexpected error" in response.json()["detail"].lower()
+        
     def test_delete_quotation(self, client, mock_repositories, mock_quotation):
         """Test deleting a quotation"""
         # Setup repository mock

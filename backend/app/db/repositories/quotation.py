@@ -186,13 +186,25 @@ class QuotationRepository(BaseRepository[Quotation]):
         update_data: Dict[str, Any],
         items_data: Optional[List[Dict[str, Any]]] = None,
         tag_ids: Optional[List[int]] = None,
-        user_id: Optional[int] = None
+        user_id: Optional[int] = None,
+        quotation_obj: Optional[Quotation] = None
     ) -> Optional[Quotation]:
         """
         Updates a quotation.
         """
-        # Get the quotation
-        quotation = await self.get_quotation_by_id(db_session, quotation_id, include_items=True)
+        # Get the quotation if not provided
+        if quotation_obj is None:
+            quotation = await self.get_quotation_by_id(db_session, quotation_id, include_items=True, include_tags=True if tag_ids is not None else False)
+        else:
+            quotation = quotation_obj
+            # Ensure items are loaded if items_data is provided and items are not loaded
+            if items_data is not None and 'items' not in quotation.__dict__: # A simple check, might need more robust lazy loading check
+                await db_session.refresh(quotation, attribute_names=['items'])
+            # Ensure tags are loaded if tag_ids is provided and tags are not loaded
+            if tag_ids is not None and 'tags' not in quotation.__dict__: # A simple check
+                await db_session.refresh(quotation, attribute_names=['tags'])
+
+
         if not quotation:
             return None
         
@@ -264,7 +276,8 @@ class QuotationRepository(BaseRepository[Quotation]):
                 details=details
             )
             db_session.add(history_entry)
-        
+
+        db_session.add(quotation) # Add the quotation object to the session before commit
         await db_session.commit()
         await db_session.refresh(quotation)
         return quotation

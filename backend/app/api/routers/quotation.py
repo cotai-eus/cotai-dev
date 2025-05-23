@@ -6,6 +6,7 @@ from typing import List, Optional, Any, Dict
 from fastapi import APIRouter, Depends, HTTPException, Body, Query, Path, status
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError, DataError
 
 from app.api.deps import get_current_user
 from app.db.session import get_async_session
@@ -74,6 +75,16 @@ async def create_quotation(
     # Create quotation data
     quotation_data = quotation_in.dict(exclude={"items", "tag_ids"})
     quotation_data["created_by_id"] = current_user.id
+
+    # Validate tag_ids before creating the quotation
+    if tag_ids:
+        for tag_id in tag_ids:
+            tag = await quotation_tag_repository.get_tag_by_id(db_session=db, tag_id=tag_id)
+            if not tag:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=f"Invalid tag_id: {tag_id} - tag not found."
+                )
     
     # Create quotation
     try:
@@ -92,10 +103,20 @@ async def create_quotation(
             include_items=True,
             include_tags=True
         )
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Failed to create quotation due to a conflict: {str(e)}"
+        )
+    except DataError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Failed to create quotation due to invalid data: {str(e)}"
+        )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to create quotation: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred while creating quotation: {str(e)}"
         )
 
 
@@ -198,20 +219,33 @@ async def update_quotation(
             update_data=update_data,
             items_data=items_data,
             tag_ids=quotation_in.tag_ids,
-            user_id=current_user.id
+            user_id=current_user.id,
+            quotation_obj=quotation  # Pass the fetched quotation object
         )
         
         # Get complete updated quotation
-        return await quotation_repository.get_quotation_by_id(
-            db_session=db,
-            quotation_id=quotation_id,
-            include_items=True,
-            include_tags=True
+        # No need to fetch again if updated_quotation is the same object and is refreshed
+        # However, if the relationships (items, tags) are critical and might be affected
+        # by other operations or need to be absolutely fresh from DB, fetching again might be safer.
+        # For this optimization, we assume that the refreshed object is sufficient.
+        if updated_quotation:
+             # Ensure relationships are loaded if they were meant to be returned
+            await db.refresh(updated_quotation, attribute_names=['items', 'tags'])
+        return updated_quotation
+    except IntegrityError as e:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail=f"Failed to update quotation due to a conflict: {str(e)}"
+        )
+    except DataError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"Failed to update quotation due to invalid data: {str(e)}"
         )
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to update quotation: {str(e)}"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"An unexpected error occurred while updating quotation: {str(e)}"
         )
 
 
@@ -282,7 +316,8 @@ async def update_quotation_status(
             db_session=db,
             quotation_id=quotation_id,
             update_data=update_data,
-            user_id=current_user.id
+            user_id=current_user.id,
+            quotation_obj=quotation  # Pass the fetched quotation object
         )
         
         return updated_quotation
